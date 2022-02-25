@@ -13,7 +13,6 @@ class HomeScreen extends StatelessWidget {
       const ItemViewWidget()];
 
     return PageView(
-      controller: PageController(initialPage: pages.length),
       children: pages,
     );
   }
