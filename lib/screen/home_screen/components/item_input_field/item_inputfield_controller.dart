@@ -3,7 +3,7 @@ import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/item.dart';
 import 'package:hah/utils.dart';
 
-class ItemViewController extends ChangeNotifier {
+class ItemInputFieldController extends ChangeNotifier {
   String _itemName = "";
   final Currency _itemPrice = Currency.zero;
 
@@ -15,32 +15,28 @@ class ItemViewController extends ChangeNotifier {
   final priceInputFieldController = TextEditingController();
   final nameInputFieldController = TextEditingController();
 
-  ItemViewController() {
+  ItemInputFieldController() {
     nameInputFieldController.addListener(() {
       _itemName = nameInputFieldController.text;
     });
 
     priceInputFieldController.addListener(() {
-      _itemPrice.value = priceInputFieldController.text;
+      try {
+        _itemPrice.value = priceInputFieldController.text;
 
-      String currencyFormat = _itemPrice.toString();
+        final currencyFormat = _itemPrice.toString();
 
-      // Move cursor position to the last
-      // and format text to currency format
-      priceInputFieldController.value = TextEditingValue(
-          text: currencyFormat,
-          selection: TextSelection.fromPosition(
-              TextPosition(offset: currencyFormat.length)));
+        // Move cursor position to the last
+        // and format text to currency format
+        priceInputFieldController.value = TextEditingValue(
+            text: currencyFormat,
+            selection: TextSelection.collapsed(offset: currencyFormat.length));
+      } on Exception {
+        // ignore
+      }
     });
   }
 
-  @override
-  void dispose() {
-    nameInputFieldController.dispose();
-    priceInputFieldController.dispose();
-
-    super.dispose();
-  }
 
   String? nameValidator(String? value) {
     if (value == null || value.isEmpty) {

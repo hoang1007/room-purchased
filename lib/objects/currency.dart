@@ -38,6 +38,8 @@ class Currency {
 
   int get value => _value;
 
+  /// if v is null throw `Argument Error`
+  /// if v is String and is not a number throw `FormatException`
   set value(dynamic v) {
     if (v == null) {
       throw ArgumentError("Value must not be null!");

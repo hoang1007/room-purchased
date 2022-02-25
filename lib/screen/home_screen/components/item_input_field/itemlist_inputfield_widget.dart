@@ -20,9 +20,12 @@ class ItemListInputFieldPane extends StatelessWidget {
             child: Column(children: [
           Expanded(child: itemInputFieldList),
           Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
               child: ElevatedButton(
                 onPressed: () {
+                  // Unfocus the text field
+                  FocusManager.instance.primaryFocus?.unfocus();
+
                   final items = <Item>[];
 
                   try {
@@ -104,7 +107,7 @@ class ItemListInputFieldPane extends StatelessWidget {
                     )));
                   }
                 },
-                child: const Text("Save"),
+                child: const Text("Save")
               )),
         ])));
   }

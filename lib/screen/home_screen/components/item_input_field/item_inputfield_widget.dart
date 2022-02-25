@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:hah/screen/home_screen/components/item_view/item_view_controller.dart';
+import 'package:hah/screen/home_screen/components/item_input_field/item_inputfield_controller.dart';
 
 class ItemInputField extends StatefulWidget {
   ItemInputField({Key? key}) : super(key: key);
 
-  final ItemViewController controller = ItemViewController();
+  final controller = ItemInputFieldController();
 
   @override
   State<StatefulWidget> createState() => _ItemInputFieldState();
 }
 
 class _ItemInputFieldState extends State<ItemInputField> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   TextFormField _createItemNameInputField() {
     return TextFormField(
       decoration: const InputDecoration(
@@ -36,6 +31,7 @@ class _ItemInputFieldState extends State<ItemInputField> {
       controller: widget.controller.priceInputFieldController,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: widget.controller.priceValidator,
+      keyboardType: TextInputType.number, // important line, avoid inf loop when user got emoji suggestions
     );
   }
 
