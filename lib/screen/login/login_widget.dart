@@ -64,7 +64,7 @@ class _LoginWidgetState extends State<LoginWidget> {
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Logging in as $_username')),
+                                  content: Text('Logged in as $_username')),
                             );
 
                             WidgetsBinding.instance
