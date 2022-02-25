@@ -54,7 +54,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                                 UserManager.instance.getUserWithName(_username);
 
                             try {
-                              UserLogging.instance.write(_username);
+                              UserLogging.instance.saveUser(_username);
                             } on Exception {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(

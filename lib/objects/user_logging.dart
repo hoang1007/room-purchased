@@ -16,18 +16,24 @@ class UserLogging {
     return File('$path/log.txt');
   }
 
-  Future<File> write(String value) async {
+  Future<File> saveUser(String username) async {
     final file = await _localFile;
 
-    return file.writeAsString(value);
+    return file.writeAsString(username);
   }
 
-  Future<String?> read() async {
+  Future<String?> getUsername() async {
     try {
       final file = await _localFile;
 
       // Read the file
-      return await file.readAsString();
+      return file.readAsString().then((value) {
+        if (value.isEmpty) {
+          return null;
+        } else {
+          return value;
+        }
+      });
     } catch (e) {
       return Future.value(null);
     }

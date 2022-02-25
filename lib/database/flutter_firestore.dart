@@ -10,12 +10,12 @@ import 'package:hah/firebase_options.dart';
 class FireStoreDatabase implements IDatabase {
   @override
   Future<void> init() async {
-    FirebaseFirestore.instance.settings =
-        const Settings(persistenceEnabled: false, cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
-
     return Future.value(Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
-    )).then((value) => print("Database Loaded"));
+    )).then((value) => {
+          FirebaseFirestore.instance.settings = const Settings(
+              cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED)
+        });
   }
 
   @override

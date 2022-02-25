@@ -28,7 +28,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return Splash(
         nextScreen: FutureBuilder(
-      future: UserLogging.instance.read(),
+      future: UserLogging.instance.getUsername(),
       builder: (context, AsyncSnapshot<String?> snapshot) {
         if (snapshot.data == null) {
           return const LoginWidget(nextScreen: HomeScreen());
