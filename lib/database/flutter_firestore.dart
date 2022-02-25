@@ -13,8 +13,8 @@ class FireStoreDatabase implements IDatabase {
     return Future.value(Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     )).then((value) => {
-          FirebaseFirestore.instance.settings = const Settings(
-              cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED)
+          FirebaseFirestore.instance.settings =
+              const Settings(cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED)
         });
   }
 
@@ -64,10 +64,14 @@ class FireStoreDatabase implements IDatabase {
       Map<String, List<Item>> result = {};
 
       snapshot.docs.forEach((element) {
-        result[element.data().name] =
-            (element.get("items.${month.toString()}") as List<dynamic>)
-                .map((e) => _FireStoreUtils.itemFromJson(e))
-                .toList();
+        try {
+          var items = element.get("items.$month") as List<dynamic>;
+
+          result[element.data().name] =
+              items.map((e) => _FireStoreUtils.itemFromJson(e)).toList();
+        } on StateError {
+          // ignore if user does not purchase any item in this month.
+        }
       });
 
       return Future<Map<String, List<Item>>>.value(result);

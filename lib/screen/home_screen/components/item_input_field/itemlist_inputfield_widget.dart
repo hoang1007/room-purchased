@@ -3,7 +3,7 @@ import 'package:hah/objects/item.dart';
 import 'package:hah/objects/monthtime.dart';
 import 'package:hah/objects/user_manager.dart';
 import 'package:hah/database/idatabase.dart';
-import 'item_view/item_inputfield_widget.dart';
+import 'item_inputfield_widget.dart';
 
 class ItemListInputFieldPane extends StatelessWidget {
   const ItemListInputFieldPane({Key? key, required this.itemCount})
