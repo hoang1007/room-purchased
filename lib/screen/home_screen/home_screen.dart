@@ -8,36 +8,11 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const ItemListInputFieldPane(itemCount: 10,),
-      const ItemViewWidget()];
-
     return PageView(
-      children: pages,
+      children: const [
+        ItemListInputFieldPane(itemCount: 10,),
+        ItemViewWidget()
+      ],
     );
   }
 }
-//
-// class _HomeScreenState extends State<HomeScreen> {
-//   final double _threshold = 5;
-//   int _choosenScreenId = 0;
-//
-//   final _screens = [
-//     const ItemListInputFieldPane(itemCount: 10),
-//     const ItemViewWidget()
-//   ];
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return GestureDetector(
-//       onPanUpdate: (DragUpdateDetails details) {
-//         if (details.delta.dx > _threshold || details.delta.dx < -_threshold) {
-//           setState(() {
-//             _choosenScreenId = (_choosenScreenId + 1) % _screens.length;
-//           });
-//         }
-//       },
-//       child: _screens[_choosenScreenId],
-//     );
-//   }
-// }
