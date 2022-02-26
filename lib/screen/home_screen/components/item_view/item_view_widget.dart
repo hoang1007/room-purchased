@@ -16,7 +16,8 @@ class ItemViewWidget extends StatefulWidget {
 }
 
 class _ItemViewState extends State<ItemViewWidget> {
-  int _selectedIndex = 0;
+  int _selectedIndex =
+      UserManager.instance.users.indexOf(UserManager.instance.iUser);
   var selectedMonth = MonthTime.now();
 
   void _onTapped(int index) {
