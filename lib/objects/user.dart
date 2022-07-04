@@ -1,74 +1,35 @@
+import 'package:flutter/cupertino.dart';
 import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/item.dart';
+import 'package:hah/objects/item_list.dart';
 import 'package:hah/objects/monthtime.dart';
 
 class User {
   final String name;
   // Item list indexing by month
-  final Map<MonthTime, List<Item>> _items = {};
+  final ItemList itemlist = ItemList();
 
-  User({required this.name});
+  User({required this.name, Map<MonthTime, List<Item>>? initItems}) {
+    if (initItems != null) {
+      // Don't track the initial items
+      itemlist.raw.setTrack(false);
+      itemlist.concat(initItems);
 
-  void addItem(Item newItem) {
-    var month = MonthTime.fromDateTime(newItem.purchasedTime);
-
-    if (_items.containsKey(month)) {
-      _items[month]!.add(newItem);
-    } else {
-      _items[month] = [newItem];
+      // Re-enable tracking mode
+      itemlist.raw.setTrack(true);
     }
-  }
-
-  void addAll(Iterable<Item> newItems) {
-    for (var element in newItems) {
-      addItem(element);
-    }
-  }
-
-  /// `month`: any day in month
-  void addItemsWithSameMonth(MapEntry<MonthTime, List<Item>> newItems) {
-    if (_items.containsKey(newItems)) {
-      _items[newItems.key]!.addAll(newItems.value);
-    } else {
-      _items[newItems.key] = newItems.value;
-    }
-  }
-
-  void addItems(Map<MonthTime, List<Item>> newItems) {
-    _items.addAll(newItems);
-  }
-
-  void update(MapEntry<MonthTime, List<Item>?> newItems) {
-    if (newItems.value == null) {
-      _items[newItems.key] = [];
-    } else {
-      _items[newItems.key] = newItems.value!;
-    }
-  }
-
-  /// `month`: any day in month
-  List<Item> getItemsInMonth(MonthTime month) {
-    if (!_items.containsKey(month)) {
-      _items[month] = [];
-    }
-
-    return _items[month]!;
   }
 
   /// `month`: any day in month
   Currency getTotalPurchasedInMonth(MonthTime month) {
-    if (_items.containsKey(month)) {
-      Currency total = Currency.zero;
+    var items = itemlist.getItemsInMonth(month);
 
-      for (var item in _items[month]!) {
-        total = total.add(item.price);
-      }
+    Currency total = Currency.zero;
 
-      return total;
+    for (var item in items) {
+      total = total.add(item.price);
     }
 
-    return Currency.zero;
+    return total;
   }
-
-  Map<MonthTime, List<Item>> get items => _items;
 }

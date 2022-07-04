@@ -6,3 +6,12 @@ class NotFoundException implements Exception {
   @override
   String toString() => message;
 }
+
+class InvalidValue implements Exception {
+  final String message;
+
+  InvalidValue([this.message = ""]);
+
+  @override
+  String toString() => message;
+}

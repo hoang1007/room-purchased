@@ -33,7 +33,21 @@ class MonthTime implements Comparable<MonthTime> {
   }
 
   @override
+  int get hashCode {
+    return toString().hashCode;
+  }
+
+  @override
   int compareTo(MonthTime other) {
     return 12 * (_year - other._year) + (_month - other._month);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is MonthTime) {
+      return _year == other._year && _month == other._month;
+    } else {
+      return false;
+    }
   }
 }

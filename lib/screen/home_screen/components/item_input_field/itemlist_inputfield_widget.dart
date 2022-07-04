@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hah/objects/item.dart';
 import 'package:hah/objects/monthtime.dart';
 import 'package:hah/objects/user_manager.dart';
-import 'package:hah/database/idatabase.dart';
 import 'item_inputfield_widget.dart';
 
 class ItemListInputFieldPane extends StatelessWidget {
@@ -48,15 +47,13 @@ class ItemListInputFieldPane extends StatelessWidget {
                   }
 
                   if (items.isNotEmpty) {
-                    var itemsInSameMonth = MapEntry(
+                    var itemsInMonth = MapEntry(
                         MonthTime.fromDateTime(items[0].purchasedTime), items);
 
-                    UserManager.instance.iUser
-                        .addItemsWithSameMonth(itemsInSameMonth);
+                    UserManager.instance.user.itemlist.addItemsInMonth(itemsInMonth);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: FutureBuilder<void>(
-                      future: IDatabase.instance.addItems(
-                          UserManager.instance.iUser, itemsInSameMonth),
+                      future: UserManager.instance.saveUser(),
                       builder:
                           (BuildContext context, AsyncSnapshot<void> snapshot) {
                         List<Widget> children;

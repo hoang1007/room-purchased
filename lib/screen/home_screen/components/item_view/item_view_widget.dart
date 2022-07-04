@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hah/database/idatabase.dart';
+import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/item.dart';
 import 'package:hah/objects/monthtime.dart';
 import 'package:hah/objects/user.dart';
-import 'package:hah/objects/user_manager.dart';
-import 'package:hah/database/idatabase.dart';
+import 'package:intl/intl.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 class ItemViewWidget extends StatefulWidget {
@@ -16,8 +17,8 @@ class ItemViewWidget extends StatefulWidget {
 }
 
 class _ItemViewState extends State<ItemViewWidget> {
-  int _selectedIndex =
-      UserManager.instance.users.indexOf(UserManager.instance.iUser);
+  int _selectedIndex = 0;
+
   var selectedMonth = MonthTime.now();
 
   void _onTapped(int index) {
@@ -43,37 +44,64 @@ class _ItemViewState extends State<ItemViewWidget> {
     });
   }
 
-  List<BottomNavigationBarItem> _createUserBarItems() {
-    return UserManager.instance.users
+  List<BottomNavigationBarItem> _createUserBarItems(
+      Iterable<String> usernames) {
+    return usernames
         .map((e) => BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline_rounded), label: e.name))
+            icon: const Icon(Icons.person_outline_rounded), label: e))
         .toList();
+  }
+
+  Map<String, Currency> _getPurchasedInfo(List<User> users, MonthTime month) {
+    var total = Currency.zero;
+
+    for (var user in users) {
+      total = total.add(user.getTotalPurchasedInMonth(month));
+    }
+
+    var average = total.devideInt(users.length);
+
+    return {"total": total, "average": average};
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Item Purchased in $selectedMonth"),
-        centerTitle: true,
-      ),
-      body: _ItemListView(
-        user: UserManager.instance.users[_selectedIndex],
-        month: selectedMonth,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: _createUserBarItems(),
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.accents[0],
-        onTap: _onTapped,
-      ),
-      floatingActionButton: ElevatedButton(
-        onPressed: _selectDateTime,
-        child: const Icon(Icons.calendar_month),
-        style: ElevatedButton.styleFrom(
-          shape: const CircleBorder(),
-        ),
-      ),
+    return FutureBuilder(
+      future: IDatabase.instance.getUsers(),
+      builder: (BuildContext context, AsyncSnapshot<List<User>> snapshot) {
+        if (snapshot.hasData) {
+          var users = snapshot.data!;
+          var purchasedInfo = _getPurchasedInfo(users, selectedMonth);
+
+          return Scaffold(
+            appBar: AppBar(
+              title: Text("Item Purchased in $selectedMonth"),
+              centerTitle: true,
+            ),
+            body: _ItemListView(
+              user: users[_selectedIndex],
+              month: selectedMonth,
+              totalPurchased: purchasedInfo["total"]!,
+              avgPurchased: purchasedInfo["average"]!,
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              items: _createUserBarItems(users.map((e) => e.name)),
+              currentIndex: _selectedIndex,
+              selectedItemColor: Colors.accents[0],
+              onTap: _onTapped,
+            ),
+            floatingActionButton: ElevatedButton(
+              onPressed: _selectDateTime,
+              child: const Icon(Icons.calendar_month),
+              style: ElevatedButton.styleFrom(
+                shape: const CircleBorder(),
+              ),
+            ),
+          );
+        } else {
+          return const CircularProgressIndicator();
+        }
+      },
     );
   }
 }
@@ -81,16 +109,23 @@ class _ItemViewState extends State<ItemViewWidget> {
 class _ItemListView extends StatelessWidget {
   final User user;
   final MonthTime month;
+  final Currency totalPurchased;
+  final Currency avgPurchased;
 
-  const _ItemListView({Key? key, required this.user, required this.month})
+  const _ItemListView(
+      {Key? key,
+      required this.user,
+      required this.month,
+      required this.totalPurchased,
+      required this.avgPurchased})
       : super(key: key);
 
   ListView _createItemListView() {
     return ListView.separated(
       padding: const EdgeInsets.all(8),
-      itemCount: user.getItemsInMonth(month).length,
+      itemCount: user.itemlist.getItemsInMonth(month).length,
       itemBuilder: (context, index) {
-        return _createItemWidget(user.getItemsInMonth(month)[index]);
+        return _createItemWidget(user.itemlist.getItemsInMonth(month)[index]);
       },
       separatorBuilder: (context, index) => const Divider(),
     );
@@ -103,81 +138,35 @@ class _ItemListView extends StatelessWidget {
         Expanded(
             child: Text(item.price.toString(), textAlign: TextAlign.center)),
         Expanded(
-            child: Text(item.purchasedTime.toString(),
+            child: Text(
+                DateFormat('dd/MM/yyyy hh:mm').format(item.purchasedTime),
                 textAlign: TextAlign.center)),
       ],
     );
   }
 
-  List<Widget> _getItemViewobjects() {
-    return <Widget>[
-      Expanded(child: _createItemListView()),
-      Row(children: <Widget>[
-        Expanded(
-          child: Text("Purchased: ${user.getTotalPurchasedInMonth(month)}",
-              textAlign: TextAlign.center),
-        ),
-        Expanded(
-            child: Text(
-                "Total: ${UserManager.instance.getTotalPurchased(month)}",
-                textAlign: TextAlign.center)),
-        Expanded(
-            child: Text(
-                "Difference: ${user.getTotalPurchasedInMonth(month).subtract(UserManager.instance.getAveragePurchased(month))}",
-                textAlign: TextAlign.center)),
-      ]),
-      const SizedBox(
-        height: 8,
-      ) // for bottom padding
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: IDatabase.instance.getItemsInMonthOfAllUsers(month),
-      builder: (BuildContext context,
-          AsyncSnapshot<Map<String, List<Item>>> snapshot) {
-        List<Widget> children;
-
-        if (snapshot.hasData) {
-          var data = snapshot.data!;
-
-          for (User user in UserManager.instance.users) {
-            if (data.containsKey(user.name)) {
-              user.update(MapEntry(month, data[user.name]));
-            } else {
-              user.update(MapEntry(month, []));
-            }
-          }
-
-          children = _getItemViewobjects();
-        } else if (snapshot.hasError) {
-          debugPrintStack(stackTrace: snapshot.stackTrace);
-          UserManager.instance.clearUserItems();
-          children = _getItemViewobjects();
-
-          WidgetsBinding.instance?.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(snapshot.error.toString()),
-              duration: const Duration(seconds: 1),
-            ));
-          });
-        } else {
-          children = <Widget>[
-            const Center(
-                child: SizedBox(
-              width: 60,
-              height: 60,
-              child: CircularProgressIndicator(),
-            ))
-          ];
-        }
-
-        return Column(
-          children: children,
-        );
-      },
+    return Column(
+      children: [
+        Expanded(child: _createItemListView()),
+        Row(children: <Widget>[
+          Expanded(
+            child: Text("Purchased: ${user.getTotalPurchasedInMonth(month)}",
+                textAlign: TextAlign.center),
+          ),
+          Expanded(
+              child:
+                  Text("Total: $totalPurchased", textAlign: TextAlign.center)),
+          Expanded(
+              child: Text(
+                  "Difference: ${user.getTotalPurchasedInMonth(month).subtract(avgPurchased)}",
+                  textAlign: TextAlign.center)),
+          const SizedBox(
+            height: 8,
+          )
+        ]),
+      ],
     );
   }
 }

@@ -1,4 +1,4 @@
-package com.example.hah
+package com.gnaoh.hah
 
 import io.flutter.embedding.android.FlutterActivity
 

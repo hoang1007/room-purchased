@@ -1,62 +1,84 @@
+import 'package:hah/database/idatabase.dart';
 import 'package:hah/objects/currency.dart';
-import 'package:hah/objects/item.dart';
 import 'package:hah/objects/monthtime.dart';
 import 'package:hah/objects/user.dart';
 import 'package:hah/exception.dart';
+import 'package:hah/objects/user_logging.dart';
 
 class UserManager {
-  UserManager._userManager();
-
   static final UserManager _instance = UserManager._userManager();
 
   static UserManager get instance => _instance;
 
-  final List<User> users = [];
-  User? _iUser;
+  User? _user;
 
-  void addUser(User user) => users.add(user);
-
-  User get iUser => _iUser!;
-  set iUser(User user) {
-    _iUser ??= user;
+  UserManager._userManager() {
+    _user = null;
   }
 
-  void addUserWithItems(User user, Iterable<Item> items) {
-    user.addAll(items);
-    users.add(user);
+  User get user {
+    if (_user == null) {
+      throw InvalidValue("No user in manager.");
+    } else {
+      return _user!;
+    }
   }
 
-  void clearUserItems() {
-    for (var user in users) {
-      user.items.clear();
+  set user(User user) {
+    _user ??= user;
+  }
+
+  Future<void> saveUser() async {
+    for (var entry in user.itemlist.raw.trackedItems.entries) {
+      await IDatabase.instance.addItems(user, entry);
+    }
+
+    user.itemlist.raw.clearTrack();
+  }
+
+  Future<User> getSavedUser() async {
+    String? username = await UserLogging.instance.getUsername();
+
+    if (username == null) {
+      throw InvalidValue("No user has been saved.");
+    } else {
+      return IDatabase.instance.getUserByName(username);
     }
   }
 
   /// Get user match witch given name.
   /// throw `NotFoundException` if user is not found
-  User getUserWithName(String name) {
-    for (var user in users) {
-      if (user.name == name) return user;
-    }
-
-    throw NotFoundException("Provided name does not match any users.");
-  }
-
-  Currency getTotalPurchased(MonthTime month) {
-    Currency total = Currency.zero;
-
-    for (var user in users) {
-      total = total.add(user.getTotalPurchasedInMonth(month));
-    }
-
-    return total;
-  }
-
-  Currency getAveragePurchased(MonthTime month) {
+  Future<User> getUserWithName(String name) async {
     try {
-      return getTotalPurchased(month).devideInt(users.length);
-    } on ArgumentError {
-      return Currency.zero;
+      var user = await IDatabase.instance.getUserByName(name);
+
+      return user;
+    } on Exception {
+      throw NotFoundException("Provided name does not match any users.");
     }
+  }
+
+  /// Get purchased infomantion of users.
+  /// Returns: total purchased and average purchased of all users
+  Future<Map<String, Currency>> getPurchasedInfo(MonthTime month) async {
+    var items = await IDatabase.instance.getItemsInMonthOfAllUsers(month);
+
+    Map<String, Currency> res = {};
+
+    Currency total = Currency.zero;
+    int numUser = 0;
+
+    for (var userItems in items.values) {
+      numUser += 1;
+
+      for (var item in userItems) {
+        total = total.add(item.price);
+      }
+    }
+
+    res["total"] = total;
+    res["average"] = total.devideInt(numUser);
+
+    return res;
   }
 }

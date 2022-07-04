@@ -13,10 +13,11 @@ class UserLogging {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/log.txt');
+
+    return File('$path/log.dat');
   }
 
-  Future<File> saveUser(String username) async {
+  Future<File> saveUsername(String username) async {
     final file = await _localFile;
 
     return file.writeAsString(username);

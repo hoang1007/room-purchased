@@ -1,10 +1,16 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/monthtime.dart';
 import 'package:hah/objects/user.dart';
 import 'package:hah/objects/item.dart';
 import 'package:hah/database/idatabase.dart';
+
+/**
+ * This file is used to connect to your Firebase.
+ * Run `flutter configure` to generate it.
+ */
 import 'package:hah/firebase_options.dart';
 
 class FireStoreDatabase implements IDatabase {
@@ -22,7 +28,7 @@ class FireStoreDatabase implements IDatabase {
   Future<void> addItems(User user, MapEntry<MonthTime, List<Item>> items) {
     return _FireStoreUtils.getUserRef().doc(user.name).update({
       "items.${items.key.toString()}": FieldValue.arrayUnion(
-          items.value.map((e) => _FireStoreUtils.itemToJson(e)).toList())
+          items.value.map((e) => _FireStoreConverter.itemToJson(e)).toList())
     });
   }
 
@@ -52,7 +58,7 @@ class FireStoreDatabase implements IDatabase {
         .doc("${user.name}.items.${month.toString()}")
         .get()
         .then((value) => (value.data()! as List<Map<String, dynamic>>)
-            .map((e) => _FireStoreUtils.itemFromJson(e))
+            .map((e) => _FireStoreConverter.itemFromJson(e))
             .toList());
   }
 
@@ -68,7 +74,7 @@ class FireStoreDatabase implements IDatabase {
           var items = element.get("items.$month") as List<dynamic>;
 
           result[element.data().name] =
-              items.map((e) => _FireStoreUtils.itemFromJson(e)).toList();
+              items.map((e) => _FireStoreConverter.itemFromJson(e)).toList();
         } on StateError {
           // ignore if user does not purchase any item in this month.
         }
@@ -86,9 +92,7 @@ class FireStoreDatabase implements IDatabase {
   }
 }
 
-class _FireStoreUtils {
-  static const String _userCollection = "Users";
-
+class _FireStoreConverter {
   static Map<String, dynamic> itemToJson(Item item) {
     return <String, dynamic>{
       'name': item.name,
@@ -105,14 +109,12 @@ class _FireStoreUtils {
   static Map<String, dynamic> userToJson(User user) {
     return <String, dynamic>{
       'name': user.name,
-      'items': user.items.map((k, e) =>
+      'items': user.itemlist.map((k, e) =>
           MapEntry(k.toString(), e.map((e) => itemToJson(e)).toList())),
     };
   }
 
   static User userFromJson(Map<String, dynamic> json) {
-    User user = User(name: json['name'] as String);
-
     var itemsMap = (json['items'] as Map<String, dynamic>).map(
       (k, e) => MapEntry(
           MonthTime.parse(k),
@@ -121,14 +123,19 @@ class _FireStoreUtils {
               .toList()),
     );
 
-    user.addItems(itemsMap);
+    User user = User(name: json['name'] as String, initItems: itemsMap);
     return user;
   }
+}
+
+class _FireStoreUtils {
+  static const String _userCollection = "Users";
+
 
   static CollectionReference<User> getUserRefWithConverter() {
     return FirebaseFirestore.instance.collection(_userCollection).withConverter(
-        fromFirestore: (snapshot, _) => userFromJson(snapshot.data()!),
-        toFirestore: (user, _) => userToJson(user));
+        fromFirestore: (snapshot, _) => _FireStoreConverter.userFromJson(snapshot.data()!),
+        toFirestore: (user, _) => _FireStoreConverter.userToJson(user));
   }
 
   static CollectionReference getUserRef() {
