@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/item.dart';
 import 'package:hah/objects/item_list.dart';
-import 'package:hah/objects/monthtime.dart';
+import 'package:hah/objects/time.dart';
 
 class User {
   final String name;
