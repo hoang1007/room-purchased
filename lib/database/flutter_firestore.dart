@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hah/objects/currency.dart';
-import 'package:hah/objects/monthtime.dart';
+import 'package:hah/objects/time.dart';
 import 'package:hah/objects/user.dart';
 import 'package:hah/objects/item.dart';
 import 'package:hah/database/idatabase.dart';

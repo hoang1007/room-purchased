@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hah/objects/user.dart';
 import 'package:hah/objects/user_logging.dart';
 import 'package:hah/objects/user_manager.dart';
-import 'package:hah/screen/components/text_field_container.dart';
+import 'package:hah/screen/widgets/text_field_container.dart';
 
 class LoginWidget extends StatefulWidget {
   final Widget nextScreen;
