@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/time.dart';
 import 'package:hah/objects/user.dart';
@@ -90,6 +89,26 @@ class FireStoreDatabase implements IDatabase {
       return snapshot.docs.map((e) => e.id).toList();
     });
   }
+
+  @override
+  Future<bool> getPaidStatusInMonth(MonthTime month) {
+    var statusDoc =
+        FirebaseFirestore.instance.collection("Status").doc(month.toString());
+
+    return statusDoc.get().then((value) {
+      if (value.exists) {
+        return value.data()!["paid"] as bool;
+      } else {
+        statusDoc.set({"paid": false});
+        return false;
+      }
+    });
+  }
+
+  @override
+  Future<void> setPaidStatus(MonthTime month, bool paid) {
+    return FirebaseFirestore.instance.collection("Status").doc(month.toString()).set({"paid": paid});
+  }
 }
 
 class _FireStoreConverter {
@@ -131,10 +150,10 @@ class _FireStoreConverter {
 class _FireStoreUtils {
   static const String _userCollection = "Users";
 
-
   static CollectionReference<User> getUserRefWithConverter() {
     return FirebaseFirestore.instance.collection(_userCollection).withConverter(
-        fromFirestore: (snapshot, _) => _FireStoreConverter.userFromJson(snapshot.data()!),
+        fromFirestore: (snapshot, _) =>
+            _FireStoreConverter.userFromJson(snapshot.data()!),
         toFirestore: (user, _) => _FireStoreConverter.userToJson(user));
   }
 

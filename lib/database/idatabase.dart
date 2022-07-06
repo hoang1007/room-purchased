@@ -30,6 +30,16 @@ abstract class IDatabase {
   /// Get all users in the database.
   Future<List<User>> getUsers();
 
+  /// Get paid status in `month`.
+  ///
+  /// Return `true` if paid `false` if not.
+  ///
+  /// If `month` is not present in database. Add it and return `false`.
+  Future<bool> getPaidStatusInMonth(MonthTime month);
+
+  /// Set paid status in `month`.
+  Future<void> setPaidStatus(MonthTime month, bool paid);
+
   static void setDatabase(IDatabase database) {
     _instance = database;
   }
