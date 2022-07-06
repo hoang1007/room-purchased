@@ -79,12 +79,11 @@ class ItemInputFieldController extends ChangeNotifier {
   }
 
   Item? getItem() {
-    var _itemPrice = Currency.fromString(_itemPriceStr);
-
     if (validate()) {
-      if (_itemName.isEmpty || _itemPrice == Currency.zero) {
+      if (_itemName.isEmpty || _itemPriceStr.isEmpty) {
         return null;
       } else {
+        var _itemPrice = Currency.fromString(_itemPriceStr);
         return Item(_itemName, _itemPrice, DateTime.now());
       }
     } else {
