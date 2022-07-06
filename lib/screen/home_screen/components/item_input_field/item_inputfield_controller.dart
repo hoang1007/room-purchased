@@ -5,12 +5,10 @@ import 'package:hah/utils.dart';
 
 class ItemInputFieldController extends ChangeNotifier {
   String _itemName = "";
-  final Currency _itemPrice = Currency.zero;
+  String _itemPriceStr = "";
 
   bool _legalItemName = true;
   bool _legalItemPrice = true;
-
-  bool _firstFocus = true;
 
   final priceInputFieldController = TextEditingController();
   final nameInputFieldController = TextEditingController();
@@ -22,40 +20,37 @@ class ItemInputFieldController extends ChangeNotifier {
 
     priceInputFieldController.addListener(() {
       try {
-        _itemPrice.value = priceInputFieldController.text;
-
-        final currencyFormat = _itemPrice.toString();
-
-        // Move cursor position to the last
-        // and format text to currency format
-        priceInputFieldController.value = TextEditingValue(
-            text: currencyFormat,
-            selection: TextSelection.collapsed(offset: currencyFormat.length));
+        if (priceInputFieldController.text.isNotEmpty) {
+          _itemPriceStr = Currency.fromString(priceInputFieldController.text).toString();
+        } else {
+          _itemPriceStr = priceInputFieldController.text;
+        }
       } on Exception {
         // ignore
       }
+
+      // Move cursor position to the last
+      // and format text to currency format
+      priceInputFieldController.value = TextEditingValue(
+          text: _itemPriceStr,
+          selection: TextSelection.collapsed(offset: _itemPriceStr.length));
     });
   }
 
-
   String? nameValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      if (_firstFocus) {
-        return null;
-      } else {
+    if ((value == null || value.isEmpty) && _itemPriceStr.isNotEmpty) {
         _legalItemName = false;
-        return "Must not be empty.";
-      }
-    } else {
-      _legalItemName = true;
-      _firstFocus = false;
-      return null;
+        return "Must not be empty";
     }
+
+    _legalItemName = true;
+    return null;
   }
 
   String? priceValidator(String? value) {
     if (value == null || value.isEmpty) {
-      if (_firstFocus) {
+      if (_itemName.isEmpty) {
+        _legalItemPrice = true;
         return null;
       } else {
         _legalItemPrice = false;
@@ -63,7 +58,6 @@ class ItemInputFieldController extends ChangeNotifier {
       }
     }
 
-    _firstFocus = false;
     var p = IntegerParser.tryParse(value);
 
     if (p == null) {
@@ -75,7 +69,7 @@ class ItemInputFieldController extends ChangeNotifier {
       return "Less than 1000";
     } else {
       _legalItemPrice = true;
-      // Dont have any error so return null error text
+      // Don't have any error so return null error text
       return null;
     }
   }
@@ -85,6 +79,8 @@ class ItemInputFieldController extends ChangeNotifier {
   }
 
   Item? getItem() {
+    var _itemPrice = Currency.fromString(_itemPriceStr);
+
     if (validate()) {
       if (_itemName.isEmpty || _itemPrice == Currency.zero) {
         return null;
@@ -99,7 +95,6 @@ class ItemInputFieldController extends ChangeNotifier {
   void clearTextField() {
     nameInputFieldController.clear();
     priceInputFieldController.clear();
-    _firstFocus = true;
     notifyListeners();
   }
 }
