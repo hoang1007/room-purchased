@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hah/database/idatabase.dart';
 import 'package:hah/objects/currency.dart';
 import 'package:hah/objects/item.dart';
+import 'package:hah/objects/status_manager.dart';
 import 'package:hah/objects/time.dart';
 import 'package:hah/objects/user.dart';
 import 'package:hah/objects/user_manager.dart';
@@ -17,8 +18,8 @@ class ItemViewWidget extends StatefulWidget {
 
 class _ItemViewState extends State<ItemViewWidget> {
   int _selectedIndex = 0;
-
   var selectedMonth = MonthTime.now();
+  int paidStatus = StatusManager.UNKNOW;
 
   void _onTapped(int index) {
     setState(() {
@@ -86,17 +87,84 @@ class _ItemViewState extends State<ItemViewWidget> {
           return Scaffold(
             appBar: AppBar(
               title: Theme(
-                data: ThemeData.light(),
-                child: DropdownButtonHideUnderline(
-                    child: TextButton(
-                        onPressed: _selectDateTime,
-                        child: Text(selectedMonth.toString()),
-                        style: TextButton.styleFrom(
-                            shadowColor: Colors.blueGrey.shade50,
-                            primary: Colors.white,
-                            textStyle: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold)))),
-              ),
+                  data: ThemeData.light(),
+                  child: Row(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: DropdownButtonHideUnderline(
+                            child: TextButton(
+                                onPressed: _selectDateTime,
+                                child: Text(selectedMonth.toString()),
+                                style: TextButton.styleFrom(
+                                    shadowColor: Colors.blueGrey.shade50,
+                                    primary: Colors.white,
+                                    textStyle: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold)))),
+                      ),
+                      Align(
+                          alignment: Alignment.centerRight,
+                          child: FutureBuilder(
+                            future: StatusManager.getPaidStatusInMonth(
+                                    selectedMonth)
+                                .then((value) {
+                              setState(() {
+                                paidStatus = value
+                                    ? StatusManager.PAID
+                                    : StatusManager.UNPAID;
+                              });
+                            }),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<void> snapshot) {
+                              if (snapshot.hasError) {
+                                debugPrint(snapshot.error.toString());
+                              } else {
+                                return IconButton(
+                                  icon: () {
+                                    switch (paidStatus) {
+                                      case StatusManager.UNKNOW:
+                                        return const CircularProgressIndicator();
+                                      case StatusManager.UNPAID:
+                                        return const Icon(
+                                            Icons.radio_button_unchecked_outlined,
+                                            color: Colors.greenAccent);
+                                      case StatusManager.PAID:
+                                        return const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.greenAccent,
+                                        );
+                                    }
+                                  }()!,
+                                  onPressed: () {
+                                    bool newStatus = true;
+                                    if (paidStatus == StatusManager.PAID) {
+                                      newStatus = false;
+                                    }
+
+                                    StatusManager.setPaidStatus(
+                                            selectedMonth, newStatus)
+                                        .then((value) {
+                                      if (newStatus) {
+                                        setState(() {
+                                          paidStatus = StatusManager.PAID;
+                                        });
+                                      } else {
+                                        setState(() {
+                                          paidStatus = StatusManager.UNPAID;
+                                        });
+                                      }
+                                    });
+                                  },
+                                );
+                              }
+
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            },
+                          ))
+                    ],
+                  )),
               centerTitle: false,
               foregroundColor: Colors.white54,
             ),
@@ -122,10 +190,7 @@ class _ItemViewState extends State<ItemViewWidget> {
         } else {
           return const Center(
             child: SizedBox(
-              height: 60,
-              width: 60,
-              child: CircularProgressIndicator()
-            ),
+                height: 60, width: 60, child: CircularProgressIndicator()),
           );
         }
       },
